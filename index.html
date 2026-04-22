@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     CONFIGURATION — edit the JS block below, not here
+     ============================================================ */
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream: #F7F4EF;
+    --ink: #1C1A17;
+    --muted: #7A7672;
+    --border: rgba(28,26,23,0.12);
+    --accent: #8B6F47;
+    --col-gap: clamp(6px, 1.2vw, 14px);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 6vw, 5rem) clamp(2rem, 5vw, 3.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: clamp(1.5rem, 6vw, 5rem);
+    width: 60px;
+    height: 2px;
+    background: var(--accent);
+  }
+
+  .site-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 300;
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    color: var(--ink);
+  }
+
+  .site-subtitle {
+    font-size: 0.8rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── Filter nav ── */
+  nav {
+    padding: 1.4rem clamp(1.5rem, 6vw, 5rem);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .filter-btn {
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'Jost', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .filter-btn:hover { color: var(--ink); border-color: var(--ink); }
+  .filter-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+
+  /* ── Masonry grid ── */
+  main {
+    padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 3.5rem);
+    columns: 3 220px;
+    column-gap: var(--col-gap);
+  }
+
+  /* ── Card ── */
+  .card {
+    break-inside: avoid;
+    margin-bottom: var(--col-gap);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #e8e4dc;
+  }
+
+  .card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    image-rendering: auto;
+  }
+
+  .card:hover img { transform: scale(1.04); }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(28,26,23,0.62) 0%, transparent 55%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: flex-end;
+    padding: 1.2rem;
+  }
+
+  .card:hover .card-overlay { opacity: 1; }
+
+  .card-label {
+    color: #F7F4EF;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 300;
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  .card-label small {
+    display: block;
+    font-family: 'Jost', sans-serif;
+    font-style: normal;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-top: 0.2rem;
+  }
+
+  /* ── Lightbox ── */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(28,26,23,0.95);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  #lightbox.open { display: flex; }
+
+  #lb-img-wrap {
+    position: relative;
+    max-width: min(90vw, 1100px);
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  #lb-img {
+    max-width: 100%;
+    max-height: 78vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 2px;
+  }
+
+  #lb-caption {
+    color: rgba(247,244,239,0.7);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  #lb-close {
+    position: fixed;
+    top: 1.5rem;
+    right: 1.8rem;
+    background: none;
+    border: 1px solid rgba(247,244,239,0.25);
+    color: rgba(247,244,239,0.7);
+    font-size: 1.1rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 1001;
+  }
+
+  #lb-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  .lb-arrow {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: 1px solid rgba(247,244,239,0.2);
+    color: rgba(247,244,239,0.65);
+    font-size: 1.2rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    z-index: 1001;
+  }
+
+  .lb-arrow:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  #lb-prev { left: 1.5rem; }
+  #lb-next { right: 1.5rem; }
+
+  /* ── Footer ── */
+  footer {
+    padding: 2.5rem clamp(1.5rem, 6vw, 5rem);
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .hidden { display: none !important; }
+
+  /* Skeleton shimmer while images load */
+  .card.loading { min-height: 200px; }
+  .card.loading::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, #e8e4dc 25%, #d9d4cb 50%, #e8e4dc 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+  @media (max-width: 500px) {
+    main { columns: 2 140px; }
+    .lb-arrow { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     ✏️  YOUR CONFIGURATION — edit only this section
+     ═══════════════════════════════════════════════════════════ -->
+<script>
+const CONFIG = {
+
+  // Site header
+  title:    "Jane's Photography",
+  subtitle: "Portfolio & Personal Work",
+
+  // Footer text (left side)
+  footerLeft:  "© 2026 Jane Doe",
+  footerRight: "All rights reserved",
+
+  // ── Your photos ──────────────────────────────────────────
+  // Each photo needs:
+  //   src:      path or URL to your image
+  //             • Local file: "photos/my-photo.jpg"
+  //             • Web URL:    "https://example.com/photo.jpg"
+  //   title:    Caption shown on hover and in lightbox
+  //   category: Used for filter buttons (can be anything)
+  //   span:     (optional) "tall" makes the card taller in the grid
+  //
+  // To add more photos, copy a {} block, paste it below, update the fields.
+  // ─────────────────────────────────────────────────────────
+  photos: [
+    {
+      src:      "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+      title:    "Alpine Morning",
+      category: "Landscape"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?w=800",
+      title:    "Golden Hour Fields",
+      category: "Landscape",
+      span:     "tall"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=600",
+      title:    "Coastal Light",
+      category: "Landscape"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1534531173927-aeb928d54385?w=800",
+      title:    "Market Day",
+      category: "Street"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=800",
+      title:    "City Geometry",
+      category: "Street"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1494972688394-4cc796f9e4c5?w=600",
+      title:    "Winter Quiet",
+      category: "Street",
+      span:     "tall"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1520390138845-fd2d229dd553?w=800",
+      title:    "Morning Light",
+      category: "Portrait"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600",
+      title:    "Studio Study",
+      category: "Portrait"
+    },
+    {
+      src:      "https://images.unsplash.com/photo-1488716820095-cbe80883c496?w=800",
+      title:    "Soft Afternoon",
+      category: "Portrait"
+    }
+  ]
+
+};
+</script>
+<!-- ═══════════════════════════════════════════════════════ -->
+
+
+<!-- Page structure — no need to edit below this line -->
+<header>
+  <h1 class="site-title" id="site-title"></h1>
+  <p class="site-subtitle" id="site-subtitle"></p>
+</header>
+
+<nav id="filters"></nav>
+
+<main id="grid"></main>
+
+<footer>
+  <span id="footer-left"></span>
+  <span id="footer-right"></span>
+</footer>
+
+<!-- Lightbox -->
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button id="lb-close" aria-label="Close">✕</button>
+  <button class="lb-arrow" id="lb-prev" aria-label="Previous">←</button>
+  <div id="lb-img-wrap">
+    <img id="lb-img" src="" alt="">
+    <p id="lb-caption"></p>
+  </div>
+  <button class="lb-arrow" id="lb-next" aria-label="Next">→</button>
+</div>
+
+<script>
+(function () {
+  // ── Populate header / footer
+  document.getElementById('site-title').textContent    = CONFIG.title;
+  document.getElementById('site-subtitle').textContent = CONFIG.subtitle;
+  document.getElementById('footer-left').textContent   = CONFIG.footerLeft;
+  document.getElementById('footer-right').textContent  = CONFIG.footerRight;
+
+  // ── Build filter buttons
+  const categories = ['All', ...new Set(CONFIG.photos.map(p => p.category))];
+  const nav = document.getElementById('filters');
+  let activeFilter = 'All';
+
+  categories.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-btn' + (cat === 'All' ? ' active' : '');
+    btn.textContent = cat;
+    btn.addEventListener('click', () => {
+      activeFilter = cat;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.textContent === cat));
+      filterCards();
+    });
+    nav.appendChild(btn);
+  });
+
+  function filterCards () {
+    document.querySelectorAll('.card').forEach(card => {
+      const match = activeFilter === 'All' || card.dataset.category === activeFilter;
+      card.classList.toggle('hidden', !match);
+    });
+  }
+
+  // ── Build grid
+  const grid = document.getElementById('grid');
+  let visiblePhotos = [];
+
+  CONFIG.photos.forEach((photo, i) => {
+    const card = document.createElement('div');
+    card.className = 'card loading';
+    card.dataset.index    = i;
+    card.dataset.category = photo.category;
+
+    const img = document.createElement('img');
+    img.alt = photo.title;
+    img.loading = 'lazy';
+
+    const overlay = document.createElement('div');
+    overlay.className = 'card-overlay';
+    overlay.innerHTML = `<div class="card-label">${photo.title}<small>${photo.category}</small></div>`;
+
+    img.onload  = () => card.classList.remove('loading');
+    img.onerror = () => { card.classList.remove('loading'); card.style.minHeight = '160px'; };
+    img.src = photo.src;
+
+    card.appendChild(img);
+    card.appendChild(overlay);
+    card.addEventListener('click', () => openLightbox(parseInt(card.dataset.index)));
+    grid.appendChild(card);
+  });
+
+  // ── Lightbox logic
+  const lb       = document.getElementById('lightbox');
+  const lbImg    = document.getElementById('lb-img');
+  const lbCap    = document.getElementById('lb-caption');
+  let currentIdx = 0;
+
+  function getVisible () {
+    return CONFIG.photos
+      .map((p, i) => ({ ...p, i }))
+      .filter(p => activeFilter === 'All' || p.category === activeFilter);
+  }
+
+  function openLightbox (photoIdx) {
+    const visible = getVisible();
+    const pos = visible.findIndex(p => p.i === photoIdx);
+    if (pos === -1) return;
+    currentIdx = pos;
+    showPhoto(visible[pos]);
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function showPhoto (photo) {
+    lbImg.src = photo.src;
+    lbImg.alt = photo.title;
+    lbCap.textContent = photo.title + ' — ' + photo.category;
+  }
+
+  function navigate (dir) {
+    const visible = getVisible();
+    currentIdx = (currentIdx + dir + visible.length) % visible.length;
+    showPhoto(visible[currentIdx]);
+  }
+
+  document.getElementById('lb-close').addEventListener('click', closeLightbox);
+  document.getElementById('lb-prev').addEventListener('click', () => navigate(-1));
+  document.getElementById('lb-next').addEventListener('click', () => navigate(1));
+
+  lb.addEventListener('click', e => { if (e.target === lb) closeLightbox(); });
+
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape')     closeLightbox();
+    if (e.key === 'ArrowLeft')  navigate(-1);
+    if (e.key === 'ArrowRight') navigate(1);
+  });
+
+  function closeLightbox () {
+    lb.classList.remove('open');
+    document.body.style.overflow = '';
+    lbImg.src = '';
+  }
+})();
+</script>
+</body>
+</html>
