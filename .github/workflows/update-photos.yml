@@ -1,0 +1,28 @@
+name: Update photos.json
+
+on:
+  push:
+    paths:
+      - 'photos/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-manifest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate photos.json from the photos folder
+        run: |
+          cd photos
+          ls -1 | grep -iE '\.(jpe?g|png|webp|gif|avif)$' | sort | jq -R . | jq -s . > photos.json
+
+      - name: Commit if the list changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add photos/photos.json
+          git diff --staged --quiet || (git commit -m "Update photos.json" && git push)
