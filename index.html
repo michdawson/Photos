@@ -3,91 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Photo Gallery</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+<title>My Photography</title>
+<meta name="description" content="A personal photography collection.">
+<meta property="og:title" content="My Photography">
+<meta property="og:description" content="A personal photography collection.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --cream: #F7F4EF;
-    --ink: #1C1A17;
-    --muted: #7A7672;
-    --border: rgba(28,26,23,0.12);
-    --accent: #8B6F47;
-    --col-gap: clamp(6px, 1.2vw, 14px);
+    --paper: #E9E9E4;
+    --ink: #16181B;
+    --graphite: #62666B;
+    --rule: #C9CAC4;
+    --blank: #D8D8D2;
+    --prussian: #1D3F72;
+    --dark: #0F1113;
+    --pad: clamp(1.25rem, 5vw, 4rem);
+    --gap: clamp(6px, 1.1vw, 14px);
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'Hanken Grotesk', system-ui, sans-serif;
   }
   html { scroll-behavior: smooth; }
-  body { background: var(--cream); color: var(--ink); font-family: 'Jost', sans-serif; font-weight: 300; min-height: 100vh; }
+  body { background: var(--paper); color: var(--ink); font-family: var(--sans); font-weight: 300; line-height: 1.5; min-height: 100vh; }
+  ::selection { background: var(--prussian); color: var(--paper); }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--prussian); outline-offset: 3px; }
 
-  header {
-    padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 6vw, 5rem) clamp(2rem, 5vw, 3.5rem);
-    display: flex; flex-direction: column; gap: 0.5rem;
-    border-bottom: 1px solid var(--border); position: relative;
-  }
-  header::after {
-    content: ''; position: absolute; bottom: -1px; left: clamp(1.5rem, 6vw, 5rem);
-    width: 60px; height: 2px; background: var(--accent);
-  }
-  .site-title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 300; font-size: clamp(2.2rem, 6vw, 4rem); letter-spacing: -0.01em; line-height: 1.05; }
-  .site-subtitle { font-size: 0.8rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); }
+  /* Header: title on the left, one random frame on the right */
+  header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: end; padding: clamp(2rem, 6vw, 4.5rem) var(--pad) clamp(2rem, 5vw, 3.5rem); }
+  .site-title { font-family: var(--serif); font-weight: 400; font-size: clamp(3.2rem, 9.5vw, 8rem); line-height: 0.92; letter-spacing: -0.025em; }
+  .site-subtitle { margin-top: 1.4rem; color: var(--graphite); font-size: 1.05rem; max-width: 34ch; }
+  .lead { justify-self: end; max-width: 100%; display: none; flex-direction: column; gap: 0.7rem; text-align: left; }
+  .lead.ready { display: flex; }
+  .lead-btn { display: block; background: var(--blank); }
+  .lead img { display: block; max-width: 100%; max-height: 68vh; width: auto; height: auto; opacity: 0; transition: opacity 0.8s ease; }
+  .lead img.loaded { opacity: 1; }
+  .lead-cap { font-family: var(--serif); font-style: italic; font-size: 1.15rem; line-height: 1.2; }
+  .lead-cap span { font-family: var(--sans); font-style: normal; font-size: 0.85rem; color: var(--graphite); margin-left: 0.5rem; }
 
-  nav { padding: 1.4rem clamp(1.5rem, 6vw, 5rem); display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border); }
-  .filter-btn { border: 1px solid var(--border); background: transparent; color: var(--muted); font-family: 'Jost', sans-serif; font-size: 0.7rem; font-weight: 400; letter-spacing: 0.14em; text-transform: uppercase; padding: 0.45rem 1rem; cursor: pointer; transition: all 0.2s; border-radius: 2px; }
-  .filter-btn:hover { color: var(--ink); border-color: var(--ink); }
-  .filter-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+  /* Filters */
+  nav { position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; padding: 0.9rem var(--pad); background: rgba(233,233,228,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+  .filter-btn { padding: 0.3rem 0; font-size: 0.95rem; color: var(--graphite); border-bottom: 1.5px solid transparent; transition: color 0.2s, border-color 0.2s; }
+  .filter-btn sup { font-size: 0.65rem; margin-left: 0.2rem; }
+  .filter-btn:hover { color: var(--ink); }
+  .filter-btn[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--prussian); }
 
-  main { padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 3.5rem); columns: 3 220px; column-gap: var(--col-gap); }
+  /* Grid */
+  main { padding: clamp(1rem, 3vw, 2.5rem) var(--pad) clamp(3rem, 8vw, 6rem); columns: 3 240px; column-gap: var(--gap); }
+  .card { display: block; width: 100%; break-inside: avoid; margin-bottom: var(--gap); position: relative; overflow: hidden; background: var(--blank); min-height: 140px; text-align: left; }
+  .card img { display: block; width: 100%; height: auto; opacity: 0; transition: opacity 0.7s ease; }
+  .card.loaded { min-height: 0; }
+  .card img.loaded { opacity: 1; }
+  .card-label { position: absolute; left: 0; right: 0; bottom: 0; padding: 2.5rem 1rem 0.9rem; background: linear-gradient(to top, rgba(15,17,19,0.7), transparent); color: #F2F2EE; font-family: var(--serif); font-style: italic; font-size: 1.1rem; line-height: 1.2; opacity: 0; transition: opacity 0.25s; }
+  .card:hover .card-label, .card:focus-visible .card-label { opacity: 1; }
 
-  .card { break-inside: avoid; margin-bottom: var(--col-gap); cursor: pointer; position: relative; overflow: hidden; border-radius: 2px; background: #e8e4dc; }
-  .card img { display: block; width: 100%; height: auto; transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-  .card:hover img { transform: scale(1.04); }
-  .card-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(28,26,23,0.62) 0%, transparent 55%); opacity: 0; transition: opacity 0.3s; display: flex; align-items: flex-end; padding: 1.2rem; }
-  .card:hover .card-overlay { opacity: 1; }
-  .card-label { color: #F7F4EF; font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; font-weight: 300; font-style: italic; line-height: 1.3; }
-  .card-label small { display: block; font-family: 'Jost', sans-serif; font-style: normal; font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.75; margin-top: 0.2rem; }
-
-  #lightbox { display: none; position: fixed; inset: 0; background: rgba(28,26,23,0.95); z-index: 1000; align-items: center; justify-content: center; padding: 2rem; }
+  /* Lightbox */
+  #lightbox { display: none; position: fixed; inset: 0; z-index: 100; background: var(--dark); color: #E6E6E1; flex-direction: column; align-items: center; justify-content: center; padding: 3.5rem 1rem 1.5rem; }
   #lightbox.open { display: flex; }
-  #lb-img-wrap { position: relative; max-width: min(90vw, 1100px); max-height: 85vh; display: flex; flex-direction: column; gap: 0.8rem; }
-  #lb-img { max-width: 100%; max-height: 78vh; object-fit: contain; display: block; border-radius: 2px; }
-  #lb-caption { color: rgba(247,244,239,0.7); font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1rem; text-align: center; }
-  #lb-close { position: fixed; top: 1.5rem; right: 1.8rem; background: none; border: 1px solid rgba(247,244,239,0.25); color: rgba(247,244,239,0.7); font-size: 1.1rem; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 1001; }
-  #lb-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
-  .lb-arrow { position: fixed; top: 50%; transform: translateY(-50%); background: none; border: 1px solid rgba(247,244,239,0.2); color: rgba(247,244,239,0.65); font-size: 1.2rem; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 1001; }
-  .lb-arrow:hover { background: rgba(255,255,255,0.1); color: #fff; }
-  #lb-prev { left: 1.5rem; } #lb-next { right: 1.5rem; }
+  #lb-stage { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; }
+  #lb-img { max-width: min(94vw, 1500px); max-height: 100%; object-fit: contain; display: block; }
+  #lb-bar { width: min(94vw, 1500px); display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-top: 0.9rem; }
+  #lb-title { font-family: var(--serif); font-style: italic; font-size: 1.3rem; line-height: 1.2; }
+  #lb-meta { font-size: 0.85rem; color: #9A9EA3; display: flex; gap: 1.2rem; align-items: baseline; white-space: nowrap; }
+  #lb-copy { color: #C9CDD2; border-bottom: 1px solid #4A4F55; }
+  #lb-copy:hover { color: #fff; border-color: #fff; }
+  .lb-btn { position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 1px solid #3A3F45; color: #C9CDD2; display: flex; align-items: center; justify-content: center; transition: background 0.2s, color 0.2s; }
+  .lb-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+  .lb-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  #lb-close { top: 1rem; right: 1rem; }
+  #lb-prev { left: 1rem; top: 50%; transform: translateY(-50%); }
+  #lb-next { right: 1rem; top: 50%; transform: translateY(-50%); }
 
-  footer { padding: 2.5rem clamp(1.5rem, 6vw, 5rem); border-top: 1px solid var(--border); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); display: flex; gap: 2rem; flex-wrap: wrap; justify-content: space-between; }
+  footer { padding: 1.5rem var(--pad) 2.5rem; border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--graphite); display: flex; gap: 2rem; flex-wrap: wrap; justify-content: space-between; }
 
   .hidden { display: none !important; }
-  #error-msg { padding: 4rem clamp(1.5rem, 6vw, 5rem); color: var(--muted); font-size: 0.9rem; line-height: 1.8; }
-  #error-msg code { font-family: monospace; background: rgba(0,0,0,0.06); padding: 0.1em 0.4em; border-radius: 3px; }
+  #error-msg { padding: 3rem var(--pad); color: var(--graphite); line-height: 1.9; max-width: 60ch; }
+  #error-msg code { font-family: ui-monospace, monospace; font-size: 0.85em; background: rgba(0,0,0,0.07); padding: 0.1em 0.4em; border-radius: 3px; }
 
-  .card.loading { min-height: 200px; }
-  .card.loading::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, #e8e4dc 25%, #d9d4cb 50%, #e8e4dc 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
-  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-  @media (max-width: 500px) { main { columns: 2 140px; } .lb-arrow { display: none; } }
+  @media (max-width: 760px) {
+    header { grid-template-columns: 1fr; }
+    .lead { justify-self: start; }
+    .lead img { max-height: 55vh; }
+  }
+  @media (max-width: 500px) {
+    main { columns: 2 140px; }
+    .lb-btn#lb-prev, .lb-btn#lb-next { display: none; }
+    #lb-bar { flex-direction: column; gap: 0.3rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition-duration: 0.01ms !important; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════
-     ✏️  EDIT THESE TWO LINES TO CUSTOMISE
-     ═══════════════════════════════════════════ -->
+<!-- Edit these lines to customise the site -->
 <script>
 const SITE_TITLE    = "My Photography";
 const SITE_SUBTITLE = "A personal collection";
 const FOOTER_LEFT   = "© 2026";
 const FOOTER_RIGHT  = "";
-// Photos folder path — change only if your folder is named differently
-const PHOTOS_DIR    = "photos/";
+const PHOTOS_DIR    = "photos/";   // change only if your folder is named differently
 </script>
-<!-- ════════════════════════════════════════════ -->
 
 <header>
-  <h1 class="site-title" id="site-title"></h1>
-  <p class="site-subtitle" id="site-subtitle"></p>
+  <div>
+    <h1 class="site-title" id="site-title"></h1>
+    <p class="site-subtitle" id="site-subtitle"></p>
+  </div>
+  <figure class="lead" id="lead">
+    <button class="lead-btn" id="lead-btn" aria-label="Open featured photo"><img id="lead-img" alt=""></button>
+    <figcaption class="lead-cap" id="lead-cap"></figcaption>
+  </figure>
 </header>
-<nav id="filters"></nav>
+<nav id="filters" aria-label="Filter photos by category"></nav>
 <main id="grid"></main>
 <div id="error-msg" class="hidden"></div>
 <footer>
@@ -95,164 +127,180 @@ const PHOTOS_DIR    = "photos/";
   <span id="footer-right"></span>
 </footer>
 
-<div id="lightbox" role="dialog" aria-modal="true">
-  <button id="lb-close">✕</button>
-  <button class="lb-arrow" id="lb-prev">←</button>
-  <div id="lb-img-wrap">
-    <img id="lb-img" src="" alt="">
-    <p id="lb-caption"></p>
+<div id="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button class="lb-btn" id="lb-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <button class="lb-btn" id="lb-prev" aria-label="Previous photo"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+  <div id="lb-stage"><img id="lb-img" src="" alt=""></div>
+  <div id="lb-bar">
+    <span id="lb-title"></span>
+    <span id="lb-meta"><span id="lb-info"></span><button id="lb-copy">Copy link</button></span>
   </div>
-  <button class="lb-arrow" id="lb-next">→</button>
+  <button class="lb-btn" id="lb-next" aria-label="Next photo"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
 </div>
 
 <script>
-// ── Populate static text
-document.getElementById('site-title').textContent    = SITE_TITLE;
-document.getElementById('site-subtitle').textContent = SITE_SUBTITLE;
-document.getElementById('footer-left').textContent   = FOOTER_LEFT;
-document.getElementById('footer-right').textContent  = FOOTER_RIGHT;
+const $ = id => document.getElementById(id);
+$('site-title').textContent    = SITE_TITLE;
+$('site-subtitle').textContent = SITE_SUBTITLE;
+$('footer-left').textContent   = FOOTER_LEFT;
+$('footer-right').textContent  = FOOTER_RIGHT;
+document.title = SITE_TITLE;
 
-// ── Parse "category-title-words.jpg" → { category, title }
-function parseFilename(filename) {
-  // Strip extension
-  const base = filename.replace(/\.[^.]+$/, '');
-  const parts = base.split('-');
-  if (parts.length === 1) return { category: 'General', title: capitalise(parts[0]) };
-  const category = capitalise(parts[0]);
-  const title = parts.slice(1).map(capitalise).join(' ');
-  return { category, title };
+// "landscape-alpine-morning.jpg" -> { category: "Landscape", title: "Alpine morning" }
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+function parseFilename(f) {
+  const parts = f.replace(/\.[^.]+$/, '').split('-');
+  if (parts.length === 1) return { category: 'General', title: cap(parts[0]) };
+  return { category: cap(parts[0]), title: cap(parts.slice(1).join(' ')) };
 }
 
-function capitalise(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+function reveal(img, box) {
+  const done = () => { img.classList.add('loaded'); if (box) box.classList.add('loaded'); };
+  if (img.complete && img.naturalWidth) done(); else { img.onload = done; img.onerror = done; }
 }
 
-// ── Build gallery from photos array
-function buildGallery(filenames) {
-  const photos = filenames.map(f => ({ src: PHOTOS_DIR + f, ...parseFilename(f) }));
-
-  // Filter buttons
-  const categories = ['All', ...new Set(photos.map(p => p.category))];
-  const nav = document.getElementById('filters');
+function buildGallery(files) {
+  const photos = files.map(f => ({ file: f, src: PHOTOS_DIR + encodeURIComponent(f), ...parseFilename(f) }));
   let activeFilter = 'All';
 
-  categories.forEach(cat => {
+  // Featured frame: a random photo each visit
+  const lead = photos[Math.floor(Math.random() * photos.length)];
+  const leadImg = $('lead-img');
+  leadImg.alt = lead.title;
+  leadImg.src = lead.src;
+  reveal(leadImg);
+  $('lead-cap').textContent = lead.title;
+  const leadCat = document.createElement('span');
+  leadCat.textContent = lead.category;
+  $('lead-cap').appendChild(leadCat);
+  $('lead').classList.add('ready');
+  $('lead-btn').addEventListener('click', () => openLightbox(photos.indexOf(lead)));
+
+  // Filters, with counts
+  const counts = {};
+  photos.forEach(p => counts[p.category] = (counts[p.category] || 0) + 1);
+  const nav = $('filters');
+  ['All', ...Object.keys(counts)].forEach(cat => {
     const btn = document.createElement('button');
-    btn.className = 'filter-btn' + (cat === 'All' ? ' active' : '');
+    btn.className = 'filter-btn';
+    btn.dataset.cat = cat;
+    btn.setAttribute('aria-pressed', cat === 'All');
     btn.textContent = cat;
+    const n = document.createElement('sup');
+    n.textContent = cat === 'All' ? photos.length : counts[cat];
+    btn.appendChild(n);
     btn.addEventListener('click', () => {
       activeFilter = cat;
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.textContent === cat));
-      filterCards();
+      nav.querySelectorAll('.filter-btn').forEach(b => b.setAttribute('aria-pressed', b.dataset.cat === cat));
+      document.querySelectorAll('.card').forEach(c => c.classList.toggle('hidden', cat !== 'All' && c.dataset.category !== cat));
     });
     nav.appendChild(btn);
   });
 
-  function filterCards() {
-    document.querySelectorAll('.card').forEach(card => {
-      card.classList.toggle('hidden', activeFilter !== 'All' && card.dataset.category !== activeFilter);
-    });
-  }
-
-  // Grid cards
-  const grid = document.getElementById('grid');
-  photos.forEach((photo, i) => {
-    const card = document.createElement('div');
-    card.className = 'card loading';
-    card.dataset.index    = i;
-    card.dataset.category = photo.category;
-
+  // Grid
+  const grid = $('grid');
+  photos.forEach((p, i) => {
+    const card = document.createElement('button');
+    card.className = 'card';
+    card.dataset.category = p.category;
+    card.setAttribute('aria-label', p.title + ', ' + p.category);
     const img = document.createElement('img');
-    img.alt     = photo.title;
+    img.alt = p.title;
     img.loading = 'lazy';
-    img.onload  = () => card.classList.remove('loading');
-    img.onerror = () => { card.classList.remove('loading'); card.style.minHeight = '80px'; };
-    img.src = photo.src;
-
-    const overlay = document.createElement('div');
-    overlay.className = 'card-overlay';
-    overlay.innerHTML = `<div class="card-label">${photo.title}<small>${photo.category}</small></div>`;
-
-    card.append(img, overlay);
+    img.src = p.src;
+    reveal(img, card);
+    const label = document.createElement('span');
+    label.className = 'card-label';
+    label.textContent = p.title;
+    card.append(img, label);
     card.addEventListener('click', () => openLightbox(i));
     grid.appendChild(card);
   });
 
   // Lightbox
-  const lb    = document.getElementById('lightbox');
-  const lbImg = document.getElementById('lb-img');
-  const lbCap = document.getElementById('lb-caption');
-  let cur = 0;
+  const lb = $('lightbox'), lbImg = $('lb-img');
+  let cur = 0, opener = null;
+  const visible = () => photos.filter(p => activeFilter === 'All' || p.category === activeFilter);
 
-  function getVisible() {
-    return photos.map((p, i) => ({ ...p, i })).filter(p => activeFilter === 'All' || p.category === activeFilter);
+  function show(p, list) {
+    lbImg.src = p.src;
+    lbImg.alt = p.title;
+    $('lb-title').textContent = p.title;
+    $('lb-info').textContent = p.category + ', ' + (list.indexOf(p) + 1) + ' of ' + list.length;
+    $('lb-copy').textContent = 'Copy link';
+    history.replaceState(null, '', '#' + encodeURIComponent(p.file));
+    [list[(list.indexOf(p) + 1) % list.length], list[(list.indexOf(p) - 1 + list.length) % list.length]]
+      .forEach(n => { new Image().src = n.src; });
   }
-
-  function openLightbox(photoIdx) {
-    const vis = getVisible();
-    const pos = vis.findIndex(p => p.i === photoIdx);
-    if (pos === -1) return;
-    cur = pos;
-    show(vis[pos]);
+  function openLightbox(idx) {
+    let list = visible();
+    const p = photos[idx];
+    if (!list.includes(p)) { activeFilter = 'All'; list = photos; nav.querySelector('[data-cat="All"]').click(); }
+    cur = list.indexOf(p);
+    opener = document.activeElement;
+    show(p, list);
     lb.classList.add('open');
     document.body.style.overflow = 'hidden';
+    $('lb-close').focus();
   }
-
-  function show(photo) {
-    lbImg.src = photo.src;
-    lbImg.alt = photo.title;
-    lbCap.textContent = photo.title + ' — ' + photo.category;
+  function step(dir) {
+    const list = visible();
+    cur = (cur + dir + list.length) % list.length;
+    show(list[cur], list);
   }
-
-  function navigate(dir) {
-    const vis = getVisible();
-    cur = (cur + dir + vis.length) % vis.length;
-    show(vis[cur]);
-  }
-
-  document.getElementById('lb-close').addEventListener('click', close);
-  document.getElementById('lb-prev').addEventListener('click', () => navigate(-1));
-  document.getElementById('lb-next').addEventListener('click', () => navigate(1));
-  lb.addEventListener('click', e => { if (e.target === lb) close(); });
-  document.addEventListener('keydown', e => {
-    if (!lb.classList.contains('open')) return;
-    if (e.key === 'Escape')     close();
-    if (e.key === 'ArrowLeft')  navigate(-1);
-    if (e.key === 'ArrowRight') navigate(1);
-  });
-
   function close() {
     lb.classList.remove('open');
     document.body.style.overflow = '';
     lbImg.src = '';
+    history.replaceState(null, '', location.pathname + location.search);
+    if (opener) opener.focus();
   }
+
+  $('lb-close').addEventListener('click', close);
+  $('lb-prev').addEventListener('click', () => step(-1));
+  $('lb-next').addEventListener('click', () => step(1));
+  $('lb-copy').addEventListener('click', () => {
+    if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(() => { $('lb-copy').textContent = 'Link copied'; });
+  });
+  lb.addEventListener('click', e => { if (e.target === lb || e.target.id === 'lb-stage') close(); });
+  document.addEventListener('keydown', e => {
+    if (!lb.classList.contains('open')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') step(-1);
+    if (e.key === 'ArrowRight') step(1);
+  });
+  let x0 = null;
+  lb.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 50) step(dx < 0 ? 1 : -1);
+    x0 = null;
+  });
+
+  // Open a shared photo link, e.g. site/#landscape-alpine-morning.jpg
+  const wanted = decodeURIComponent(location.hash.slice(1));
+  const hit = photos.findIndex(p => p.file === wanted);
+  if (wanted && hit !== -1) openLightbox(hit);
 }
 
-// ── Load photos.json
 fetch(PHOTOS_DIR + 'photos.json')
-  .then(r => {
-    if (!r.ok) throw new Error('not found');
-    return r.json();
-  })
+  .then(r => { if (!r.ok) throw new Error('not found'); return r.json(); })
   .then(data => {
     if (!Array.isArray(data) || data.length === 0) throw new Error('empty');
     buildGallery(data);
   })
   .catch(() => {
-    document.getElementById('grid').classList.add('hidden');
-    const err = document.getElementById('error-msg');
+    $('grid').classList.add('hidden');
+    const err = $('error-msg');
     err.classList.remove('hidden');
     err.innerHTML = `
-      <p><strong>No photos found.</strong> To add your photos:</p>
-      <ol style="margin-top:1rem; padding-left:1.4rem; line-height:2.2;">
-        <li>Put your image files in the <code>photos/</code> folder on GitHub</li>
-        <li>Name them like: <code>landscape-alpine-morning.jpg</code> (category first, then title words, separated by hyphens)</li>
-        <li>Create a file called <code>photos/photos.json</code> containing a list of your filenames:<br>
-          <code>["landscape-alpine-morning.jpg", "portrait-golden-hour.jpg"]</code>
-        </li>
-        <li>Commit — your gallery will appear automatically</li>
-      </ol>
-    `;
+      <p><strong>No photos found.</strong> To add photos:</p>
+      <ol style="margin-top:1rem; padding-left:1.4rem;">
+        <li>Upload your images to the <code>photos/</code> folder on GitHub.</li>
+        <li>Name each file with the category first, then the title words, separated by hyphens, such as <code>landscape-alpine-morning.jpg</code>.</li>
+        <li>Make sure <code>photos/photos.json</code> lists your filenames. The update-photos workflow does this for you.</li>
+      </ol>`;
   });
 </script>
 </body>
